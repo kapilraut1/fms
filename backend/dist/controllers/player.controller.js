@@ -13,7 +13,7 @@ export const createPlayer = async (req, res) => {
         // Squad limit
         const totalPlayers = await playerRepo.count();
         if (totalPlayers >= 22) {
-            return res.status(400).json({ message: "Squad is full (Maximum is 22)" });
+            return res.status(400).json({ message: "(Maximum squad is 22)" });
         }
         // Jersey number
         const existingJersey = await playerRepo.findOne({
