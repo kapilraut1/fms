@@ -55,7 +55,4 @@ export class Player extends BaseEntity {
     nullable: true,
   })
   nationality?: string;
-
-  // @Column({ type: "boolean", default: false })
-  // isStartingXI: boolean;
 }

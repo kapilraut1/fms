@@ -8,12 +8,17 @@ import {
   getPlayerById,
 } from "../controllers/player.controller.js";
 
+import {
+  validate,
+  playerSchema,
+  updatePlayerSchema,
+} from "../libs/validator/player.validator.js";
 const Routes = express.Router();
 
 Routes.get("/", getPlayers);
 Routes.get("/:id", getPlayerById);
-Routes.post("/", createPlayer);
-Routes.put("/:id", updatePlayer);
+Routes.post("/", validate(playerSchema), createPlayer);
+Routes.put("/:id", validate(updatePlayerSchema), updatePlayer);
 Routes.delete("/:id", deletePlayer);
 
 export default Routes;
