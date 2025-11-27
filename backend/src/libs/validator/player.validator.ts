@@ -22,12 +22,10 @@ export const validate =
     if (!result.success) {
       logger.error({
         message: "request body should be valid",
-        errors: result.error.format(),
       });
 
       return res.status(400).json({
         message: "Validation has failed",
-        errors: result.error,
       });
     }
 
