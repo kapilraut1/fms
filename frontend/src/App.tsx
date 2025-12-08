@@ -1,7 +1,15 @@
+import { BrowserRouter as Router } from "react-router";
+import { AppRoutes } from "./routes/index";
+import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 function App() {
+  const queryClient = new QueryClient();
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center">
-      <h1 className="text-3xl text-green-700">Hello, World!</h1>
+    <div className="flex min-h-svh flex-col">
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <AppRoutes />
+        </Router>
+      </QueryClientProvider>
     </div>
   );
 }

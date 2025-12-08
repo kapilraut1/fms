@@ -2,9 +2,11 @@ import { Request, Response } from "express";
 import { AppDataSource } from "../libs/utils/data-source.js";
 import { Player } from "../entities/player.js";
 import { validate } from "class-validator";
+import { Not } from "typeorm";
+import { StartingXI } from "../entities/startingXI.entity.js";
 
 const playerRepo = AppDataSource.getRepository(Player);
-
+const startingRepo = AppDataSource.getRepository(StartingXI);
 // Creating PLAYER
 export const createPlayer = async (req: Request, res: Response) => {
   try {
@@ -17,7 +19,7 @@ export const createPlayer = async (req: Request, res: Response) => {
     // Squad limit
     const totalPlayers = await playerRepo.count();
     if (totalPlayers >= 22) {
-      return res.status(400).json({ message: "(Maximum squad is 22)" });
+      return res.status(400).json({ message: "Maximum squad is 22" });
     }
 
     // Jersey number
@@ -63,12 +65,12 @@ export const getPlayers = async (req: Request, res: Response) => {
 
     res.json({
       data: players,
-      // meta: {
-      //   total,
-      //   page,
-      //   limit,
-      //   totalPages: Math.ceil(total / limit),
-      // },
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
       squad: {
         current: total,
         max: 22,
@@ -84,7 +86,6 @@ export const getPlayers = async (req: Request, res: Response) => {
 export const getPlayerById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    console.log(id);
     const player = await playerRepo.findOne({ where: { id: Number(id) } });
     if (!player) {
       return res.status(404).json({ message: "Player not found" });
@@ -113,18 +114,18 @@ export const updatePlayer = async (req: Request, res: Response) => {
     }
 
     // Jersey number check
-    if (
-      req.body.jerseyNumber &&
-      req.body.jerseyNumber !== player.jerseyNumber
-    ) {
+    if (req.body.jerseyNumber) {
       const existingJersey = await playerRepo.findOne({
-        where: { jerseyNumber: req.body.jerseyNumber },
+        where: {
+          jerseyNumber: Number(req.body.jerseyNumber),
+          id: Not(player.id), // ignore same player
+        },
       });
+
       if (existingJersey) {
         return res.status(400).json({ message: "Jersey number already taken" });
       }
     }
-
     const saved = await playerRepo.save(player);
     res.json(saved);
   } catch (err) {
@@ -136,6 +137,7 @@ export const updatePlayer = async (req: Request, res: Response) => {
 export const deletePlayer = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const playerId = Number(id);
 
     const player = await playerRepo.findOne({ where: { id: Number(id) } });
     console.log(player);
@@ -143,6 +145,7 @@ export const deletePlayer = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Player not found" });
     }
 
+    await startingRepo.delete({ player: { id: playerId } });
     // if (player.isStartingXI) {
     //   return res.status(400).json({
     //     message: "Player is in Starting XI. Remove them from XI first.",
@@ -170,7 +173,6 @@ export const deletePlayer = async (req: Request, res: Response) => {
         breakdown: count,
       });
     }
-
     await playerRepo.remove(player);
 
     res.json({ message: "Player removed successfully" });

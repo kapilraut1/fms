@@ -6,7 +6,7 @@ import {
   BaseEntity,
   PrimaryGeneratedColumn,
 } from "typeorm";
-
+import { Transform } from "class-transformer";
 import { IsUrl, IsOptional, Max, Min } from "class-validator";
 export enum Position {
   Goalkeeper = "Goalkeeper",
@@ -48,6 +48,7 @@ export class Player extends BaseEntity {
   })
   @IsOptional()
   @IsUrl({}, { message: "Invalid URL format" })
+  @Transform(({ value }) => (value === "" ? undefined : value))
   avatarUrl?: string;
 
   @Column({

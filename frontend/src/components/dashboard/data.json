@@ -1,0 +1,93 @@
+
+[
+        {
+            "id": 10,
+            "name": "Kapi2",
+            "position": "Goalkeeper",
+            "jerseyNumber": 4,
+            "age": 41,
+            "avatarUrl": "https://developer.mozilla.org",
+            "nationality": "Nepali"
+        },
+        {
+            "id": 11,
+            "name": "Kapil21",
+            "position": "Defender",
+            "jerseyNumber": 5,
+            "age": 21,
+            "avatarUrl": "https://developer.mozilla.org",
+            "nationality": "Nepali"
+        },
+        {
+            "id": 13,
+            "name": "Kapil21",
+            "position": "Forward",
+            "jerseyNumber": 7,
+            "age": 21,
+            "avatarUrl": "https://developer.mozilla.org",
+            "nationality": "Nepali"
+        },
+        {
+            "id": 14,
+            "name": "Kapil21",
+            "position": "Defender",
+            "jerseyNumber": 8,
+            "age": 21,
+            "avatarUrl": "https://developer.mozilla.org",
+            "nationality": "Nepali"
+        },
+        {
+            "id": 15,
+            "name": "Kapil21",
+            "position": "Defender",
+            "jerseyNumber": 9,
+            "age": 21,
+            "avatarUrl": "https://developer.mozilla.org",
+            "nationality": "Nepali"
+        },
+        {
+            "id": 16,
+            "name": "Kapil21",
+            "position": "Defender",
+            "jerseyNumber": 12,
+            "age": 21,
+            "avatarUrl": "https://developer.mozilla.org",
+            "nationality": "Nepali"
+        },
+        {
+            "id": 17,
+            "name": "Kapil21",
+            "position": "Midfielder",
+            "jerseyNumber": 14,
+            "age": 21,
+            "avatarUrl": "https://developer.mozilla.org",
+            "nationality": "Nepali"
+        },
+        {
+            "id": 18,
+            "name": "Kapil21",
+            "position": "Midfielder",
+            "jerseyNumber": 18,
+            "age": 21,
+            "avatarUrl": "https://developer.mozilla.org",
+            "nationality": "Nepali"
+        },
+        {
+            "id": 19,
+            "name": "Kapil21",
+            "position": "Midfielder",
+            "jerseyNumber": 19,
+            "age": 21,
+            "avatarUrl": "https://developer.mozilla.org",
+            "nationality": "Nepali"
+        },
+        {
+            "id": 20,
+            "name": "Kapil21",
+            "position": "Midfielder",
+            "jerseyNumber": 20,
+            "age": 21,
+            "avatarUrl": "https://developer.mozilla.org",
+            "nationality": "Nepali"
+        }
+    ]
