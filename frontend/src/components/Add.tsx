@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,75 +12,123 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { hello } from "../type/Type";
+import { hello, Playerid, Position } from "../type/type";
+import { useAddPlayer } from "@/hooks/useAddPlayer";
+import { useUpdatePlayers } from "@/hooks/useUpdatePlayer";
+import { zodResolver } from "@hookform/resolvers/zod";
+import z from "zod";
+import { useGetPlayers } from "@/hooks/useGetPlayers";
 
-type help = React.ChangeEvent<HTMLInputElement | HTMLSelectElement>;
 export function Add({ open, onOpenChange, initialData }: hello) {
-  const [form, setForm] = useState({
+  const { data } = useGetPlayers(1);
+  const playerSchema = z.object({
+    name: z.string().trim().min(1, "Name is required").max(50).toUpperCase(),
+    age: z.number().int().min(15).max(50),
+    position: z.enum(["Goalkeeper", "Defender", "Midfielder", "Forward"]),
+    jerseyNumber: z
+      .number()
+      .int()
+      .min(1)
+      .max(99)
+      .refine(
+        (value) => {
+          if (initialData) return true;
+          const exist = data?.data?.some(
+            (p: Playerid) => p.jerseyNumber === value
+          );
+
+          return !exist;
+        },
+        { message: "Jersey number already taken. Choose another one" }
+      ),
+    avatarUrl: z.url("Invalid URL format").trim().optional().or(z.literal("")),
+    nationality: z.string().optional().nullable(),
+  });
+  type PlayerFormValues = z.infer<typeof playerSchema>;
+
+  const defaultValues: PlayerFormValues = {
     name: "",
-    age: 0,
-    position: "",
-    jerseyNumber: 0,
+    age: NaN,
+    position: "Goalkeeper",
+    jerseyNumber: NaN,
     avatarUrl: "",
     nationality: "",
-  });
-
-  const handleChange = (e: help) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const addMutation = useAddPlayer();
+  const updateMutation = useUpdatePlayers();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    clearErrors,
+    formState: { errors },
+  } = useForm<PlayerFormValues>({
+    resolver: zodResolver(playerSchema),
+    defaultValues,
+  });
+  const [err, setErr] = useState<string>();
   useEffect(() => {
-    const newForm = initialData
-      ? {
-          name: initialData.name || "",
-          age: initialData.age || 0,
-          position: initialData.position || "",
-          jerseyNumber: initialData.jerseyNumber || 0,
-          avatarUrl: initialData.avatarUrl || "",
-          nationality: initialData.nationality || "",
-        }
-      : {
-          name: "",
-          age: 0,
-          position: "",
-          jerseyNumber: 0,
-          avatarUrl: "",
-          nationality: "",
-        };
+    reset(
+      initialData ?? {
+        name: "",
+        age: undefined,
+        position: "Goalkeeper",
+        jerseyNumber: undefined,
+        avatarUrl: "",
+        nationality: "",
+      }
+    );
+    clearErrors();
+  }, [initialData, reset, clearErrors]);
 
-    // Only update state if values are different to avoid cascading renders
-    if (
-      form.name !== newForm.name ||
-      form.age !== newForm.age ||
-      form.position !== newForm.position ||
-      form.jerseyNumber !== newForm.jerseyNumber ||
-      form.avatarUrl !== newForm.avatarUrl ||
-      form.nationality !== newForm.nationality
-    ) {
-      setForm(newForm);
+  useEffect(() => {
+    if (!open) {
+      reset();
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setErr(undefined);
+      clearErrors();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialData]);
+  }, [open, reset, clearErrors]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
+  const onSubmit = (formData: PlayerFormValues) => {
     const newPlayer = {
-      name: form.name,
-      position: form.position,
-      jerseyNumber: Number(form.jerseyNumber),
-      age: Number(form.age),
-      avatarUrl: form.avatarUrl || null,
-      nationality: form.nationality || null,
+      name: formData.name,
+      position: formData.position as Position,
+      jerseyNumber: Number(formData.jerseyNumber),
+      age: Number(formData.age),
+      avatarUrl: formData.avatarUrl?.trim() || formData.avatarUrl || "",
+      nationality: formData.nationality?.trim() || formData.nationality || "",
     };
 
-    console.log("Submitting Player:", newPlayer);
-
-    onOpenChange(false); // close parent-controlled dialog
+    if (initialData?.id) {
+      updateMutation.mutate(
+        { id: initialData.id, player: newPlayer },
+        {
+          onSuccess: () => onOpenChange(false),
+          onError: (error: Error) => {
+            console.log(error);
+            setErr(error.message);
+          },
+        }
+      );
+    } else {
+      addMutation.mutate(newPlayer, {
+        onSuccess: () => onOpenChange(false),
+        onError: (error: Error) => {
+          console.log(error);
+          setErr(error.message);
+        },
+      });
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      key={initialData ? initialData.id : "new"}
+      open={open}
+      onOpenChange={onOpenChange}
+    >
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
@@ -91,40 +140,44 @@ export function Add({ open, onOpenChange, initialData }: hello) {
               : "Fill in the player details."}
           </DialogDescription>
         </DialogHeader>
+        {err && <span className="text-red-400">{err}</span>}
 
-        <form onSubmit={handleSubmit} className="grid gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
           {/* Name */}
           <div className="grid gap-2">
             <Label>Name</Label>
             <Input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              required
+              className="uppercase"
+              {...register("name")}
+              placeholder="Enter player name"
             />
+            {errors.name && (
+              <span className="text-red-400">{errors.name.message}</span>
+            )}
           </div>
 
           {/* Age */}
           <div className="grid gap-2">
             <Label>Age</Label>
             <Input
-              name="age"
               type="number"
-              value={form.age}
-              onChange={handleChange}
-              required
+              {...register("age", {
+                setValueAs: (value) =>
+                  value === "" ? undefined : Number(value),
+              })}
+              placeholder="age"
             />
+            {errors.age && (
+              <span className="text-red-400">{errors.age.message}</span>
+            )}
           </div>
 
           {/* Position */}
           <div className="grid gap-2">
             <Label>Position</Label>
             <select
-              name="position"
-              value={form.position}
-              onChange={handleChange}
-              className="border p-2 rounded-md"
-              required
+              {...register("position")}
+              className="border p-2 rounded-md dark:bg-gray-500"
             >
               <option value="">Select Position</option>
               <option value="Goalkeeper">Goalkeeper</option>
@@ -132,42 +185,39 @@ export function Add({ open, onOpenChange, initialData }: hello) {
               <option value="Midfielder">Midfielder</option>
               <option value="Forward">Forward</option>
             </select>
+            {errors.position && (
+              <span className="text-red-400">{errors.position.message}</span>
+            )}
           </div>
 
           {/* Jersey Number */}
           <div className="grid gap-2">
             <Label>Jersey Number</Label>
             <Input
-              name="jerseyNumber"
               type="number"
-              value={form.jerseyNumber}
-              onChange={handleChange}
-              required
+              {...register("jerseyNumber", {
+                setValueAs: (value) =>
+                  value === "" ? undefined : Number(value),
+              })}
             />
+            {errors.jerseyNumber && (
+              <span className="text-red-400">
+                {errors.jerseyNumber.message}
+              </span>
+            )}
           </div>
 
           {/* Avatar URL */}
           <div className="grid gap-2">
             <Label>Avatar URL (optional)</Label>
-            <Input
-              name="avatarUrl"
-              value={form.avatarUrl}
-              onChange={handleChange}
-              placeholder="https://example.com/avatar.png"
-            />
+            <Input {...register("avatarUrl")} />
           </div>
 
           {/* Nationality */}
           <div className="grid gap-2">
             <Label>Nationality (optional)</Label>
-            <Input
-              name="nationality"
-              value={form.nationality}
-              onChange={handleChange}
-              placeholder="Nepali"
-            />
+            <Input {...register("nationality")} />
           </div>
-
           <DialogFooter>
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>

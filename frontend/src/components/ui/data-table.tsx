@@ -101,7 +101,8 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export const schema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const schema = z.object({
   id: z.number(),
   header: z.string(),
   type: z.string(),
@@ -360,6 +361,7 @@ export function DataTable({
     [data]
   );
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,

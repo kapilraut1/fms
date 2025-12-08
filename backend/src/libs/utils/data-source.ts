@@ -4,6 +4,7 @@ import { DataSource } from "typeorm";
 import { Player } from "../../entities/player.js";
 
 import env from "../env.js";
+import { StartingXI } from "../../entities/startingXI.entity.js";
 
 export const AppDataSource = new DataSource({
   type: "mysql",
@@ -14,7 +15,7 @@ export const AppDataSource = new DataSource({
   database: env.DB_NAME,
   synchronize: true,
   logging: true,
-  entities: [Player],
+  entities: [Player, StartingXI],
   subscribers: [],
   migrations: [],
 });

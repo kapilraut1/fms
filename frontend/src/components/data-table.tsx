@@ -63,7 +63,8 @@ const schema = z.object({
 
 //getColumn function type
 const getColumns = (
-  handleEdit: (player: z.infer<typeof schema>) => void // ✅ FIXED
+  handleEdit: (player: z.infer<typeof schema>) => void,
+  handleDelete: (playerid: z.infer<typeof schema>) => void
 ): ColumnDef<z.infer<typeof schema>>[] => [
   {
     accessorKey: "id",
@@ -111,7 +112,7 @@ const getColumns = (
     cell: ({ row }) => (
       <Avatar>
         <AvatarImage src={row.original.avatarUrl} />
-        <AvatarFallback>Avatar</AvatarFallback>
+        <AvatarFallback>{row.original.avatarUrl}</AvatarFallback>
       </Avatar>
     ),
   },
@@ -129,6 +130,9 @@ const getColumns = (
         <DropdownMenuContent align="end" className="w-32">
           <DropdownMenuItem onClick={() => handleEdit(row.original)}>
             Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleDelete(row.original)}>
+            Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -162,27 +166,34 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
 
 export function DataTable({
   data: initialData,
-  handleEdit, // handleEdit passed to Parent Component Player
+  page,
+  pageCount,
+  onPageChange,
+  handleEdit,
+  handleDelete,
 }: {
   data: z.infer<typeof schema>[];
-  handleEdit: (player: z.infer<typeof schema>) => void; // ✅ FIXED
+  page: number;
+  pageCount: number;
+  onPageChange: (page: number) => void;
+  handleEdit: (player: z.infer<typeof schema>) => void;
+  handleDelete: (Playerid: z.infer<typeof schema>) => void;
 }) {
   const [data, setData] = React.useState(initialData);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [rowSelection, setRowSelection] = React.useState({});
 
-  const columns = getColumns(handleEdit);
-
-  const [pagination, setPagination] = React.useState({
-    pageIndex: 0,
-    pageSize: 5,
-  });
+  const columns = getColumns(handleEdit, handleDelete);
 
   const sensors = useSensors(
     useSensor(MouseSensor),
     useSensor(TouchSensor),
     useSensor(KeyboardSensor)
   );
+  //for refetching
+  React.useEffect(() => {
+    setData(initialData);
+  }, [initialData]);
 
   const dataIds = React.useMemo<UniqueIdentifier[]>(
     () => data.map((p) => p.id),
@@ -195,11 +206,9 @@ export function DataTable({
     state: {
       sorting,
       rowSelection,
-      pagination,
     },
     getRowId: (row) => row.id.toString(),
     onSortingChange: setSorting,
-    onPaginationChange: setPagination,
     onRowSelectionChange: setRowSelection,
     enableRowSelection: true,
     getCoreRowModel: getCoreRowModel(),
@@ -270,23 +279,22 @@ export function DataTable({
       <div className="flex items-center justify-end px-4">
         <div className="flex w-full items-center gap-8 lg:w-fit">
           <div className="flex w-fit items-center justify-center text-sm font-medium">
-            Page {table.getState().pagination.pageIndex + 1} of{" "}
-            {table.getPageCount()}
+            Page {page} of {pageCount}
           </div>
 
           <div className="ml-auto flex items-center gap-2 lg:ml-0">
             <Button
               variant="outline"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
+              onClick={() => onPageChange(page - 1)}
+              disabled={page <= 1}
             >
               Previous
             </Button>
 
             <Button
               variant="outline"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
+              onClick={() => onPageChange(page + 1)}
+              disabled={page >= pageCount}
             >
               Next
             </Button>

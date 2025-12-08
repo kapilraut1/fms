@@ -1,5 +1,5 @@
 import { type Icon } from "@tabler/icons-react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -17,6 +17,7 @@ export function NavMain({
     icon?: Icon;
   }[];
 }) {
+  const location = useLocation();
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
@@ -34,7 +35,11 @@ export function NavMain({
               <Link to={item.url}>
                 <SidebarMenuButton
                   tooltip={item.title}
-                  className="hover:bg-green-300"
+                  className={`hover:bg-orange-500 ${
+                    location.pathname === item.url
+                      ? "bg-orange-500 text-white"
+                      : ""
+                  }`}
                 >
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>

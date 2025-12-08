@@ -18,7 +18,7 @@ const data = {
     },
     {
       title: "Starting XI",
-      url: "#",
+      url: "/starting-XI",
       icon: IconListDetails,
     },
   ],
