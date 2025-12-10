@@ -1,7 +1,7 @@
 import { Route, Routes } from "react-router";
 import { routes } from "./path";
-import Home from "@/pages/home";
-import Player from "@/pages/player";
+import Home from "@/pages/Home";
+import Player from "@/pages/Player";
 import Startingxi from "@/pages/startingxi";
 
 export const AppRoutes = () => {

@@ -20,7 +20,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useTable } from "./useReactTable";
+import { useTable } from "../hooks/useReactTable";
 import {
   ColumnDef,
   flexRender,
@@ -110,9 +110,13 @@ const getColumns = (
     accessorKey: "avatarUrl",
     header: "Avatar",
     cell: ({ row }) => (
-      <Avatar>
+      <Avatar className="size-8">
         <AvatarImage src={row.original.avatarUrl} />
-        <AvatarFallback>{row.original.avatarUrl}</AvatarFallback>
+        {row.original.avatarUrl ? (
+          <AvatarFallback>{row.original.avatarUrl}</AvatarFallback>
+        ) : (
+          <AvatarFallback>NA</AvatarFallback>
+        )}
       </Avatar>
     ),
   },

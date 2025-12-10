@@ -1,6 +1,6 @@
 import { updatePlayer } from "../api/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { PlayerFormValues } from "@/type/type";
+import { PlayerFormValues } from "@/type/Type";
 import { toast } from "react-toastify";
 export function useUpdatePlayers() {
   const queryClient = useQueryClient();
@@ -12,9 +12,11 @@ export function useUpdatePlayers() {
       queryClient.invalidateQueries({ queryKey: ["players"] });
       toast.success("The player is edited successfully");
     },
-    onError: (err: Error) => {
-      console.log("Error is occuring in update context", err);
-      toast.error("Error occured while editing");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onError: (error: any) => {
+      const message =
+        error.response?.data?.error || error.message || "Something went wrong";
+      toast.error(message);
     },
   });
 }

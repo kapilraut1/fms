@@ -3,7 +3,7 @@ import { DataTable } from "@/components/data-table";
 import { useGetPlayers } from "@/hooks/useGetPlayers";
 // import { useDeletePlayers } from "@/hooks/useDeletePlayer";
 import { Add } from "../components/add";
-import { Playerid } from "@/type/type";
+import { Playerid } from "@/type/Type";
 import { Deletedialog } from "@/components/deletedialog";
 export default function Player() {
   const [open, setOpen] = useState(false);

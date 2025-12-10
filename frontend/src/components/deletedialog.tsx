@@ -8,10 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-// import { Input } from "@/components/ui/input"
-// import { Label } from "@/components/ui/label"
 import { useDeletePlayers } from "@/hooks/useDeletePlayer";
-import { del } from "@/type/type";
+import { del } from "@/type/Type";
 
 export function Deletedialog({ open, playerid, onOpen }: del) {
   const deleteMutation = useDeletePlayers();

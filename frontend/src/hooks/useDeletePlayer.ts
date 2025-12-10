@@ -11,9 +11,10 @@ export function useDeletePlayers() {
       queryClient.invalidateQueries({ queryKey: ["players"] });
       toast.success("The player is successfully deleted.");
     },
-    onError: (err: Error) => {
-      console.log("Error is occuring in delete context", err);
-      toast.error("The player is not deleted");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onError: (error: any) => {
+      const msg = error.response?.data?.message;
+      toast.error(msg);
     },
   });
 }

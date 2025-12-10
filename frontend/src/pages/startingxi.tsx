@@ -1,5 +1,5 @@
 "use client";
-import { DropdownPosition } from "@/components/dropdown";
+import { Subs } from "@/components/Substitutes";
 import { useState } from "react";
 import { useGetStartingXI } from "@/hooks/useGetStartingXI";
 import { useAddStartingXI } from "@/hooks/useAddStartingXI";
@@ -11,207 +11,166 @@ type Slots = Record<string, Player | null>;
 type LocalSlots = Record<string, number | null>;
 
 const SLOT_ORDER = {
-	FWD: ["FWD1", "FWD2"],
-	MID: ["MID1", "MID2", "MID3", "MID4"],
-	DEF: ["DEF1", "DEF2", "DEF3", "DEF4"],
-	GK: ["GK"],
+  FWD: ["FWD1", "FWD2"],
+  MID: ["MID1", "MID2", "MID3", "MID4"],
+  DEF: ["DEF1", "DEF2", "DEF3", "DEF4"],
+  GK: ["GK"],
 };
 
 export default function StartingXI() {
-	const { data, isLoading, error, refetch } = useGetStartingXI();
-	const saveXI = useAddStartingXI();
+  const { data, isLoading, error, refetch } = useGetStartingXI();
+  const saveXI = useAddStartingXI();
 
-	const [editMode, setEditMode] = useState(false);
-	const [localSlots, setLocalSlots] = useState<LocalSlots>({});
+  const [editMode, setEditMode] = useState(false);
+  const [localSlots, setLocalSlots] = useState<LocalSlots>({});
 
-	const slots: Slots = data?.slots || {};
-	const substitutes: Player[] = data?.substitute || [];
+  const slots: Slots = data?.slots || {};
+  const substitutes: Player[] = data?.substitute || [];
 
-	// edit
-	const startEdit = () => {
-		const initial: LocalSlots = {};
-		Object.entries(slots).forEach(([slot, player]) => {
-			initial[slot] = player ? player.id : null;
-		});
-		setLocalSlots(initial);
-		setEditMode(true);
-	};
+  // edit
+  const startEdit = () => {
+    const initial: LocalSlots = {};
+    Object.entries(slots).forEach(([slot, player]) => {
+      initial[slot] = player ? player.id : null;
+    });
+    setLocalSlots(initial);
+    setEditMode(true);
+  };
 
-	const cancelEdit = () => {
-		setLocalSlots({});
-		setEditMode(false);
-	};
+  const cancelEdit = () => {
+    setLocalSlots({});
+    setEditMode(false);
+  };
 
-	// PREVENT DUPLICATE ASSIGNMENTS
-	const assignPlayer = (slotKey: string, playerId: number | null) => {
-		setLocalSlots((prev) => {
-			if (playerId !== null && Object.values(prev).includes(playerId)) {
-				return prev;
-			}
+  const assignPlayer = (slotKey: string, playerId: number | null) => {
+    setLocalSlots((prev) => {
+      if (playerId !== null && Object.values(prev).includes(playerId)) {
+        return prev;
+      }
+      return { ...prev, [slotKey]: playerId };
+    });
+  };
 
-			return { ...prev, [slotKey]: playerId };
-		});
-	};
+  const handleSave = () => {
+    const dataXI = {
+      slots: Object.fromEntries(
+        Object.entries(localSlots).map(([slot, playerId]) => [
+          slot,
+          Number(playerId),
+        ])
+      ),
+    };
 
-	const handleSave = () => {
-		const allSlots = Object.keys(slots);
-		for (const slot of allSlots) {
-			if (!localSlots[slot]) {
-				alert(`Please assign a player to ${slot}`);
-				return;
-			}
-		}
+    saveXI.mutate(dataXI, {
+      onSuccess: () => {
+        setEditMode(false);
+        setLocalSlots({});
+        refetch();
+      },
+      onError: (err) => {
+        console.error("Error saving Starting XI:", err);
+        alert("Error saving Starting XI. Check console.");
+      },
+    });
+  };
 
-		const playerIds = Object.values(localSlots);
-		const duplicates = playerIds.filter(
-			(id, i) => playerIds.indexOf(id) !== i
-		);
-		if (duplicates.length > 0) {
-			alert("Same player cannot be selected twice");
-			return;
-		}
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading data</div>;
 
-		for (const [slot, playerId] of Object.entries(localSlots)) {
-			const player = [
-				...substitutes,
-				...(Object.values(slots).filter(Boolean) as Player[]),
-			].find((p) => p.id === playerId);
-			if (!player) {
-				alert(`Player with ID ${playerId} not found`);
-				return;
-			}
+  const allPlayers: Player[] = [
+    ...substitutes,
+    ...(Object.values(slots).filter(Boolean) as Player[]),
+  ];
 
-			const expectedPos = slot.startsWith("FWD")
-				? "Forward"
-				: slot.startsWith("MID")
-				? "Midfielder"
-				: slot.startsWith("DEF")
-				? "Defender"
-				: "Goalkeeper";
+  const dynamicSubstitutes = allPlayers.filter(
+    (p) => !Object.values(localSlots).includes(p.id)
+  );
 
-			if (player.position !== expectedPos) {
-				alert(`${slot} must be assigned to a ${expectedPos}`);
-				return;
-			}
-		}
+  // Determine player position from slotKey
+  const slotPosition = (slotKey: string) =>
+    slotKey.startsWith("FWD")
+      ? "Forward"
+      : slotKey.startsWith("MID")
+      ? "Midfielder"
+      : slotKey.startsWith("DEF")
+      ? "Defender"
+      : "Goalkeeper";
 
-		// 4️⃣ Build payload exactly as backend expects
-		const dataXI = {
-			slots: Object.fromEntries(
-				Object.entries(localSlots).map(([slot, playerId]) => [
-					slot,
-					Number(playerId),
-				])
-			),
-		};
+  const eligiblePlayers = (slotKey: string) =>
+    dynamicSubstitutes.filter((p) => p.position === slotPosition(slotKey));
 
-		// 5️⃣ Save
-		saveXI.mutate(dataXI, {
-			onSuccess: () => {
-				setEditMode(false);
-				setLocalSlots({});
-				refetch();
-			},
-			onError: (err) => {
-				console.error("Error saving Starting XI:", err);
-				alert("Error saving Starting XI. Check console.");
-			},
-		});
-	};
+  // RENDER EACH SLOT
+  const renderSlot = (slotKey: string) => {
+    const playerId =
+      (editMode ? localSlots[slotKey] : undefined) ??
+      slots[slotKey]?.id ??
+      null;
 
-	if (isLoading) return <div>Loading...</div>;
-	if (error) return <div>Error loading data</div>;
+    const player = allPlayers.find((p) => p.id === playerId) ?? null;
 
-	const allPlayers: Player[] = [
-		...substitutes,
-		...(Object.values(slots).filter(Boolean) as Player[]),
-	];
+    return (
+      <ShowPlayer
+        key={slotKey}
+        player={player}
+        playerId={playerId}
+        editMode={editMode}
+        assignPlayer={assignPlayer}
+        eligiblePlayers={eligiblePlayers}
+        slotKey={slotKey}
+      />
+    );
+  };
 
-	const dynamicSubstitutes = allPlayers.filter(
-		(p) => !Object.values(localSlots).includes(p.id)
-	);
+  return (
+    <div className="flex h-screen bg-green-500 dark:bg-green-700">
+      {/* SUBSTITUTES */}
+      <div className="w-[30%] p-4 bg-yellow-400 dark:bg-yellow-600 overflow-y-auto">
+        <h2 className="text-black text-xl font-bold text-center mb-4">
+          Substitutes
+        </h2>
 
-	// Determine player position from slotKey
-	const slotPosition = (slotKey: string) =>
-		slotKey.startsWith("FWD")
-			? "Forward"
-			: slotKey.startsWith("MID")
-			? "Midfielder"
-			: slotKey.startsWith("DEF")
-			? "Defender"
-			: "Goalkeeper";
+        {editMode ? (
+          <Subs substitutes={dynamicSubstitutes} />
+        ) : (
+          <Subs substitutes={substitutes} />
+        )}
+      </div>
 
-	const eligiblePlayers = (slotKey: string) =>
-		dynamicSubstitutes.filter((p) => p.position === slotPosition(slotKey));
+      {/* STARTING XI */}
+      <div className="h-screen p-4 flex flex-col items-center w-[70%] overflow-auto">
+        {!editMode ? (
+          <Button className="mb-4" onClick={startEdit}>
+            Change Players
+          </Button>
+        ) : (
+          <div className="flex gap-4 mb-4">
+            <Button onClick={handleSave}>Save XI</Button>
+            <Button variant="destructive" onClick={cancelEdit}>
+              Cancel
+            </Button>
+          </div>
+        )}
 
-	// RENDER EACH SLOT
-	const renderSlot = (slotKey: string) => {
-		const playerId =
-			(editMode ? localSlots[slotKey] : undefined) ??
-			slots[slotKey]?.id ??
-			null;
+        <h1 className="text-2xl text-black mb-4">Playing XI</h1>
 
-		const player = allPlayers.find((p) => p.id === playerId) ?? null;
+        <div className="w-full max-w-4xl flex flex-col items-center gap-6">
+          <div className="flex justify-center gap-4">
+            {SLOT_ORDER.FWD.map(renderSlot)}
+          </div>
 
-		return (
-			<ShowPlayer
-				key={slotKey}
-				player={player}
-				playerId={playerId}
-				editMode={editMode}
-				assignPlayer={assignPlayer}
-				eligiblePlayers={eligiblePlayers}
-				slotKey={slotKey}
-			/>
-		);
-	};
+          <div className="flex justify-center gap-4">
+            {SLOT_ORDER.MID.map(renderSlot)}
+          </div>
 
-	return (
-		<div className="flex h-screen bg-green-500 dark:bg-green-700">
-			{/* SUBSTITUTES */}
-			<div className="w-[30%] p-4 bg-yellow-400 dark:bg-yellow-600 overflow-y-auto">
-				<h2 className="text-black text-xl font-bold text-center mb-4">
-					Substitutes
-				</h2>
+          <div className="flex justify-center gap-4">
+            {SLOT_ORDER.DEF.map(renderSlot)}
+          </div>
 
-				<DropdownPosition substitutes={dynamicSubstitutes} />
-			</div>
-
-			{/* STARTING XI */}
-			<div className="h-screen p-4 flex flex-col items-center w-[70%] overflow-auto">
-				{!editMode ? (
-					<Button className="mb-4" onClick={startEdit}>
-						Change Players
-					</Button>
-				) : (
-					<div className="flex gap-4 mb-4">
-						<Button onClick={handleSave}>Save XI</Button>
-						<Button variant="destructive" onClick={cancelEdit}>
-							Cancel
-						</Button>
-					</div>
-				)}
-
-				<h1 className="text-2xl text-black mb-4">Playing XI</h1>
-
-				<div className="w-full max-w-4xl flex flex-col items-center gap-6">
-					<div className="flex justify-center gap-4">
-						{SLOT_ORDER.FWD.map(renderSlot)}
-					</div>
-
-					<div className="flex justify-center gap-4">
-						{SLOT_ORDER.MID.map(renderSlot)}
-					</div>
-
-					<div className="flex justify-center gap-4">
-						{SLOT_ORDER.DEF.map(renderSlot)}
-					</div>
-
-					<div className="flex justify-center gap-4">
-						{SLOT_ORDER.GK.map(renderSlot)}
-					</div>
-				</div>
-			</div>
-		</div>
-	);
+          <div className="flex justify-center gap-4">
+            {SLOT_ORDER.GK.map(renderSlot)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

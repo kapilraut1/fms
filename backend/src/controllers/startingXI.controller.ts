@@ -30,6 +30,8 @@ export const createStartingXI = async (req: Request, res: Response) => {
 
     // Must have exactly 11 slots
     if (!slots || Object.keys(slots).length !== 11) {
+      throw new Error("Starting XI must contain 11 players.");
+
       return res
         .status(400)
         .json({ error: "Starting XI must contain 11 players." });
@@ -39,6 +41,7 @@ export const createStartingXI = async (req: Request, res: Response) => {
     const playerIds = Object.values(slots);
     const duplicates = playerIds.filter((id, i) => playerIds.indexOf(id) !== i);
     if (duplicates.length > 0) {
+      throw new Error("Same player cannot be selected twice.");
       return res
         .status(400)
         .json({ error: "Same player cannot be selected twice." });
@@ -50,6 +53,7 @@ export const createStartingXI = async (req: Request, res: Response) => {
         where: { id: Number(playerId) },
       });
       if (!player) {
+        throw new Error(`Player with ID ${playerId} not found.`);
         return res
           .status(404)
           .json({ error: `Player with ID ${playerId} not found.` });
@@ -87,6 +91,7 @@ export const createStartingXI = async (req: Request, res: Response) => {
     return res.json({ message: "Starting XI saved successfully!" });
   } catch (err) {
     console.error("Error in createStartingXI:", err);
+    throw new Error("Error in backend");
     return res.status(500).json({ error: "Internal server error" });
   }
 };

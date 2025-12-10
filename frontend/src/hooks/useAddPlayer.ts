@@ -12,9 +12,9 @@ export function useAddPlayer() {
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      console.log(error);
-      console.log("Backend error", error.message);
-      toast.error("Error is", error);
+      const message =
+        error.response?.data?.error || error.message || "Something went wrong";
+      toast.error(message);
     },
   });
 }

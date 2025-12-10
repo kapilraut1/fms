@@ -1,7 +1,7 @@
 import * as React from "react";
 import { IconDashboard, IconListDetails } from "@tabler/icons-react";
 
-import { NavMain } from "@/components/nav-main";
+import { NavMain } from "@/components/Nav-main";
 import { Sidebar, SidebarContent } from "@/components/ui/sidebar";
 
 const data = {

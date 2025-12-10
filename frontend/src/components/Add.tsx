@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { hello, Playerid, Position } from "../type/type";
+import { hello, Playerid, Position } from "../type/Type";
 import { useAddPlayer } from "@/hooks/useAddPlayer";
 import { useUpdatePlayers } from "@/hooks/useUpdatePlayer";
 import { zodResolver } from "@hookform/resolvers/zod";
