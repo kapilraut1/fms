@@ -1,7 +1,10 @@
 import { Request, Response } from "express";
 import { AppDataSource } from "../libs/utils/data-source.js";
-import { StartingXI, XIPosition } from "../entities/startingXI.entity.js";
+import { StartingXI } from "../entities/startingXI.entity.js";
 import { Player } from "../entities/player.js";
+import { FormationManagement } from "../entities/formation.js";
+
+const formationRepo = AppDataSource.getRepository(FormationManagement);
 const startingRepo = AppDataSource.getRepository(StartingXI);
 
 export const getStartingXI = async (req: Request, res: Response) => {
@@ -15,10 +18,17 @@ export const getStartingXI = async (req: Request, res: Response) => {
     const substitute = allPlayers.filter(
       (p) => !startingXI.some((s) => s.player && s.player.id === p.id)
     );
-    return res.json({ slots, substitute });
+    const savedFormation = await formationRepo.findOne({
+      where: { isSelected: true },
+    });
+    return res.json({
+      slots,
+      substitute,
+      formation: savedFormation?.formation,
+    });
   } catch (err) {
     console.log("Error occured at getStartingZXI");
-    throw new Error(err);
+    return res.status(302).json({ error: "Error while fetching data " });
   }
 };
 
@@ -26,72 +36,43 @@ const playerRepo = AppDataSource.getRepository(Player);
 
 export const createStartingXI = async (req: Request, res: Response) => {
   try {
-    const { slots } = req.body;
+    const { slots, formation } = req.body;
 
-    // Must have exactly 11 slots
-    if (!slots || Object.keys(slots).length !== 11) {
-      throw new Error("Starting XI must contain 11 players.");
-
-      return res
-        .status(400)
-        .json({ error: "Starting XI must contain 11 players." });
+    if (!formation) {
+      return res.status(400).json({ error: "Formation is required." });
     }
 
-    // Check for duplicate player IDs
-    const playerIds = Object.values(slots);
-    const duplicates = playerIds.filter((id, i) => playerIds.indexOf(id) !== i);
-    if (duplicates.length > 0) {
-      throw new Error("Same player cannot be selected twice.");
-      return res
-        .status(400)
-        .json({ error: "Same player cannot be selected twice." });
+    // Find the formation entity
+    const selectedFormation = await formationRepo.findOne({
+      where: { formation: formation },
+    });
+
+    if (!selectedFormation) {
+      return res.status(404).json({ error: "Formation not found." });
     }
 
-    // Validate each slot
-    for (const [slot, playerId] of Object.entries(slots)) {
-      const player = await playerRepo.findOne({
-        where: { id: Number(playerId) },
-      });
-      if (!player) {
-        throw new Error(`Player with ID ${playerId} not found.`);
-        return res
-          .status(404)
-          .json({ error: `Player with ID ${playerId} not found.` });
-      }
+    await formationRepo
+      .createQueryBuilder()
+      .update()
+      .set({ isSelected: false })
+      .execute();
 
-      // Slot → Position validation
-      if (slot === "GK" && player.position !== "Goalkeeper")
-        return res.status(400).json({ error: "GK must be a Goalkeeper." });
+    selectedFormation.isSelected = true;
+    await formationRepo.save(selectedFormation);
 
-      if (slot.startsWith("DEF") && player.position !== "Defender")
-        return res.status(400).json({ error: "DEF slots must be Defenders." });
-
-      if (slot.startsWith("MID") && player.position !== "Midfielder")
-        return res
-          .status(400)
-          .json({ error: "MID slots must be Midfielders." });
-
-      if (slot.startsWith("FWD") && player.position !== "Forward")
-        return res.status(400).json({ error: "FWD slots must be Forwards." });
-    }
-
-    // Clear old Starting XI
     await startingRepo.clear();
 
-    // Save new Starting XI entries
     const entries = Object.entries(slots).map(([slot, playerId]) =>
       startingRepo.create({
-        position: slot as XIPosition,
+        position: slot,
         player: { id: Number(playerId) },
       })
     );
-
     await startingRepo.save(entries);
 
     return res.json({ message: "Starting XI saved successfully!" });
   } catch (err) {
-    console.error("Error in createStartingXI:", err);
-    throw new Error("Error in backend");
+    console.error(err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };

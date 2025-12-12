@@ -100,7 +100,16 @@ export const updatePlayer = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const player = await playerRepo.findOne({ where: { id: Number(id) } });
+    const startingXI = await startingRepo.find({ relations: ["player"] });
+    const isInStartingXI = startingXI.some(
+      (slot) => slot.player.id === player.id
+    );
 
+    if (isInStartingXI) {
+      return res.status(400).json({
+        message: "Player is in Starting XI so remove them from startingXI",
+      });
+    }
     if (!player) {
       return res.status(404).json({ message: "Player not found" });
     }
@@ -145,12 +154,16 @@ export const deletePlayer = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Player not found" });
     }
 
-    await startingRepo.delete({ player: { id: playerId } });
-    // if (player.isStartingXI) {
-    //   return res.status(400).json({
-    //     message: "Player is in Starting XI. Remove them from XI first.",
-    //   });
-    // }
+    const startingXI = await startingRepo.find({ relations: ["player"] });
+    const isInStartingXI = startingXI.some(
+      (slot) => slot.player.id === player.id
+    );
+
+    if (isInStartingXI) {
+      return res.status(400).json({
+        message: "Player is in Starting XI. Remove them from XI first.",
+      });
+    }
 
     // Check minimum position rule
     const allPlayers = await playerRepo.find();

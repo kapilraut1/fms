@@ -5,6 +5,7 @@ import { Player } from "../../entities/player.js";
 
 import env from "../env.js";
 import { StartingXI } from "../../entities/startingXI.entity.js";
+import { FormationManagement } from "../../entities/formation.js";
 
 export const AppDataSource = new DataSource({
   type: "mysql",
@@ -15,7 +16,7 @@ export const AppDataSource = new DataSource({
   database: env.DB_NAME,
   synchronize: true,
   logging: true,
-  entities: [Player, StartingXI],
+  entities: [Player, StartingXI, FormationManagement],
   subscribers: [],
   migrations: [],
 });
