@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { DataTable } from "@/components/data-table";
+import { DataTable } from "@/components/Data-table";
 import { useGetPlayers } from "@/hooks/useGetPlayers";
-// import { useDeletePlayers } from "@/hooks/useDeletePlayer";
-import { Add } from "../components/add";
+import { Add } from "../components/Add";
 import { Playerid } from "@/type/Type";
-import { Deletedialog } from "@/components/deletedialog";
+import { Deletedialog } from "@/components/Deletedialog";
 export default function Player() {
   const [open, setOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Playerid | null>(null);

@@ -14,7 +14,7 @@ export function Subs({ substitutes }: Prop) {
 
         if (filteredPlayers.length == 0) {
           return (
-            <div className="mb-6">
+            <div key={pos} className="mb-6">
               <h1 className="text-center font-bold">{pos}</h1>
               <h2 className="text-center">No players found</h2>
             </div>

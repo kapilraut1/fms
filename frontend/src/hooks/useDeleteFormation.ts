@@ -1,16 +1,15 @@
 import { BackError } from "@/type/Type";
-import { deletePlayer } from "../api/api";
+import { deleteFormation } from "../api/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-export function useDeletePlayers() {
+export function useDeleteFormation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: deletePlayer,
+    mutationFn: deleteFormation,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["startingXI"] });
-      queryClient.invalidateQueries({ queryKey: ["players"] });
-      toast.success("The player is successfully deleted.");
+      queryClient.invalidateQueries({ queryKey: ["formation"] });
+      toast.success("The formation is successfully deleted.");
     },
     onError: (error: BackError) => {
       const msg = error.response?.data?.message;

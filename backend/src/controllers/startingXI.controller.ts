@@ -27,19 +27,18 @@ export const getStartingXI = async (req: Request, res: Response) => {
       formation: savedFormation?.formation,
     });
   } catch (err) {
-    console.log("Error occured at getStartingZXI");
-    return res.status(302).json({ error: "Error while fetching data " });
+    return res
+      .status(302)
+      .json({ message: "Error while fetching startingXI data " });
   }
 };
-
-const playerRepo = AppDataSource.getRepository(Player);
 
 export const createStartingXI = async (req: Request, res: Response) => {
   try {
     const { slots, formation } = req.body;
 
     if (!formation) {
-      return res.status(400).json({ error: "Formation is required." });
+      return res.status(400).json({ message: "Formation is required." });
     }
 
     // Find the formation entity
@@ -48,7 +47,7 @@ export const createStartingXI = async (req: Request, res: Response) => {
     });
 
     if (!selectedFormation) {
-      return res.status(404).json({ error: "Formation not found." });
+      return res.status(404).json({ message: "Formation not found." });
     }
 
     await formationRepo
@@ -72,7 +71,6 @@ export const createStartingXI = async (req: Request, res: Response) => {
 
     return res.json({ message: "Starting XI saved successfully!" });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };

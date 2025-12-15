@@ -1,19 +1,9 @@
 export type Position = "Goalkeeper" | "Defender" | "Midfielder" | "Forward";
 export type Theme = "light" | "dark";
 
-export enum XIPosition {
-  GK = "GK",
-  DEF1 = "DEF1",
-  DEF2 = "DEF2",
-  DEF3 = "DEF3",
-  DEF4 = "DEF4",
-  MID1 = "MID1",
-  MID2 = "MID2",
-  MID3 = "MID3",
-  MID4 = "MID4",
-  FWD1 = "FWD1",
-  FWD2 = "FWD2",
-}
+export type XIPosition = `${"GK" | "DEF" | "MID" | "FWD"}${number}`;
+
+import { AxiosError } from "axios";
 export interface Prop {
   substitutes: PlayerType[];
 }
@@ -37,12 +27,12 @@ export interface Playerid extends PlayerFormValues {
   id: number;
 }
 
-export interface del {
+export interface Del {
   open: boolean;
   playerid: number;
   onOpen: (open: boolean) => void;
 }
-export interface hello {
+export interface Adder {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialData: Playerid | null;
@@ -64,7 +54,7 @@ export interface GetPlayersResponse {
   squad: SquadInfo;
 }
 
-export interface starters {
+export interface Starters {
   position: XIPosition;
   player: { id: number };
 }
@@ -85,3 +75,24 @@ export type Props = {
   eligiblePlayers?: (slotKey: string) => Player[];
   slotKey?: string;
 };
+
+export type Format = {
+  formation: string;
+  setFormation: (newFormation: string) => void;
+};
+
+export type Slots = Record<string, Player | null>;
+export type LocalSlots = Record<string, number | null>;
+
+export type FormationType = {
+  formation: string;
+  setLocalSlots: React.Dispatch<React.SetStateAction<LocalSlots>>;
+  renderSlot: (slotkey: string) => React.ReactNode;
+};
+
+export type Formationobj = {
+  id: number;
+  formation: string;
+};
+
+export type BackError = AxiosError<{ message: string }>;

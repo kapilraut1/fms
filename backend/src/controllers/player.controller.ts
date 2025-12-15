@@ -13,7 +13,7 @@ export const createPlayer = async (req: Request, res: Response) => {
     const player = playerRepo.create(req.body as Player);
     const errors = await validate(player);
     if (errors.length > 0) {
-      return res.status(400).json({ message: "Validation failed", errors });
+      return res.status(400).json({ message: errors, errors });
     }
 
     // Squad limit
@@ -30,7 +30,6 @@ export const createPlayer = async (req: Request, res: Response) => {
     if (existingJersey) {
       return res.status(400).json({ message: "Jersey number already taken" });
     }
-
     // Save player
     const saved = await playerRepo.save(player);
     return res.status(201).json(saved);
@@ -149,7 +148,6 @@ export const deletePlayer = async (req: Request, res: Response) => {
     const playerId = Number(id);
 
     const player = await playerRepo.findOne({ where: { id: Number(id) } });
-    console.log(player);
     if (!player) {
       return res.status(404).json({ message: "Player not found" });
     }

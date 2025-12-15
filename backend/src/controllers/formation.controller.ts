@@ -1,4 +1,4 @@
-import { Request, response, Response } from "express";
+import { Request, Response } from "express";
 import { AppDataSource } from "../libs/utils/data-source.js";
 import { FormationManagement } from "../entities/formation.js";
 
@@ -7,6 +7,41 @@ const formationRepo = AppDataSource.getRepository(FormationManagement);
 export const createFormation = async (req: Request, res: Response) => {
   try {
     const { formation } = req.body;
+
+    const parts = formation.split("-");
+
+    if (parts.length < 3) {
+      return res.status(400).json({
+        message: "The formation should be in this format def-mid-for ",
+      });
+    }
+    const [def, mid, forward] = parts;
+    const arr = parts.map(Number);
+
+    const sum = arr.reduce((a: number, b: number) => a + b, 0);
+    if (sum !== 10) {
+      return res.status(400).json({
+        message: "Total sum of players should be 10 excluding keeper ",
+      });
+    }
+
+    if (!def || def < 3) {
+      return res
+        .status(400)
+        .json({ message: "Defenders should be atleast 3 in numbers" });
+    }
+
+    if (!mid || mid < 2) {
+      return res
+        .status(400)
+        .json({ message: "Mid fielders should be atleast 2" });
+    }
+
+    if (!forward || forward < 1) {
+      return res
+        .status(400)
+        .json({ message: "Forwards should be atleast one" });
+    }
 
     const newformation = formationRepo.create({
       formation,
@@ -19,7 +54,6 @@ export const createFormation = async (req: Request, res: Response) => {
       data: newformation,
     });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -31,11 +65,9 @@ export const deleteFormation = async (req: Request, res: Response) => {
     const [entities, count] = findALL;
 
     if (count === 1) {
-      return res
-        .status(500)
-        .json({
-          message: "Only one formation is available. So, you can't delete",
-        });
+      return res.status(500).json({
+        message: "Only one formation is available. So, you can't delete",
+      });
     }
     const findFormation = await formationRepo.findOne({
       where: { id: Number(id) },

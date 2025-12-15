@@ -1,5 +1,4 @@
 "use client";
-
 import * as React from "react";
 import {
   closestCenter,
@@ -51,6 +50,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { IconDotsVertical } from "@tabler/icons-react";
 
+const holaUrl = import.meta.env.VITE_HOLA_URL;
 const schema = z.object({
   id: z.number(),
   name: z.string(),
@@ -115,7 +115,10 @@ const getColumns = (
         {row.original.avatarUrl ? (
           <AvatarFallback>{row.original.avatarUrl}</AvatarFallback>
         ) : (
-          <AvatarFallback>NA</AvatarFallback>
+          <>
+            <AvatarImage src={holaUrl} />
+            <AvatarFallback>{holaUrl}</AvatarFallback>
+          </>
         )}
       </Avatar>
     ),

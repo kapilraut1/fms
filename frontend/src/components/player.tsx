@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
+const holaUrl = import.meta.env.VITE_HOLA_URL;
 const ShowPlayer = ({
   player,
   playerId,
@@ -47,7 +47,7 @@ const ShowPlayer = ({
           assignPlayer(slotKey, value === "" ? null : Number(value))
         }
       >
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="md:w-30 w-20">
           <SelectValue placeholder="Select a player" defaultValue="" />
         </SelectTrigger>
 
@@ -75,14 +75,19 @@ const ShowPlayer = ({
   return (
     <div className="flex flex-col items-center">
       {/* Jersey number */}
-      <div className="w-14 h-14 md:w-20 md:h-20 rounded-full bg-white dark:bg-gray-400 flex items-center justify-center">
+      <div className="w-14 h-14 md:w-20 md:h-20 rounded-full bg-white dark:bg-gray-400 flex items-center justify-center my-3">
         {player ? (
           <Avatar className="object-fill size-19">
-            <AvatarImage src={player.avatarUrl} />
             {player.avatarUrl ? (
-              <AvatarFallback>{player.avatarUrl}</AvatarFallback>
+              <>
+                <AvatarImage src={player.avatarUrl} />
+                <AvatarFallback>{player.avatarUrl}</AvatarFallback>
+              </>
             ) : (
-              <AvatarFallback>NA</AvatarFallback>
+              <>
+                <AvatarImage src={holaUrl} />
+                <AvatarFallback>{holaUrl}</AvatarFallback>
+              </>
             )}
           </Avatar>
         ) : (
