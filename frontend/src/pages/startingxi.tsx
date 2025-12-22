@@ -17,15 +17,17 @@ export default function StartingXI() {
   const [editMode, setEditMode] = useState(false);
   const [localSlots, setLocalSlots] = useState<LocalSlots>({});
   const [formation, setFormation] = useState<string>(form);
+  const [savedFormation, setSavedFormation] = useState<string>("");
   const slots: Slots = data?.slots || {};
   const substitutes: Player[] = data?.substitute || [];
 
   useEffect(() => {
-    if (form) {
-      const timer = setTimeout(() => setFormation(form), 0);
-      return () => clearTimeout(timer);
-    }
-  }, [form]);
+    setTimeout(() => {
+      if (!form || editMode) return;
+      setFormation((prev) => (prev === form ? prev : form));
+      setSavedFormation((prev) => (prev === form ? prev : form));
+    }, 0);
+  }, [form, editMode]);
 
   const startEdit = () => {
     const initial: LocalSlots = {};
@@ -39,6 +41,7 @@ export default function StartingXI() {
 
   const cancelEdit = () => {
     setLocalSlots({});
+    setFormation(savedFormation);
     setEditMode(false);
   };
 
@@ -47,7 +50,7 @@ export default function StartingXI() {
       if (playerId !== null) {
         for (const key in prev) {
           if (prev[key] === playerId) {
-            return prev;
+            return { ...prev };
           }
         }
       }
@@ -60,7 +63,7 @@ export default function StartingXI() {
     for (const slot in localSlots) {
       const playerId = localSlots[slot];
 
-      if (playerId === null || NaN) {
+      if (playerId === null || isNaN(playerId)) {
         toast.error(`Slot ${slot} is empty`);
       }
 
@@ -105,10 +108,9 @@ export default function StartingXI() {
 
   // RENDER EACH SLOT
   const renderSlot = (slotKey: string) => {
-    const playerId =
-      (editMode ? localSlots[slotKey] : undefined) ??
-      slots[slotKey]?.id ??
-      null;
+    const playerId = editMode
+      ? localSlots[slotKey] ?? null
+      : slots[slotKey]?.id ?? null;
 
     const player = allPlayers.find((p) => p.id === playerId) ?? null;
 
