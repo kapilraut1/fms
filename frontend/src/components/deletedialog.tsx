@@ -8,12 +8,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-// import { Input } from "@/components/ui/input"
-// import { Label } from "@/components/ui/label"
 import { useDeletePlayers } from "@/hooks/useDeletePlayer";
-import { del } from "@/type/type";
+import { Del } from "@/type/Type";
 
-export function Deletedialog({ open, playerid, onOpen }: del) {
+export function Deletedialog({ open, playerid, onOpen }: Del) {
   const deleteMutation = useDeletePlayers();
 
   const handlebar = (e: React.MouseEvent) => {

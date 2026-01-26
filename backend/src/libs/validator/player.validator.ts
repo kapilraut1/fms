@@ -11,7 +11,7 @@ export const playerSchema = z.object({
     .string()
     .transform((v) => (v === "" ? undefined : v))
     .optional()
-    .pipe(z.string().url("Invalid URL format").optional()),
+    .pipe(z.url("Invalid URL format").optional()),
   nationality: z.string().optional().or(z.literal("")),
 });
 

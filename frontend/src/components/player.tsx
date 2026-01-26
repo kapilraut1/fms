@@ -1,69 +1,112 @@
-import { Player } from "@/type/Type";
-
-type Props = {
-	playerId: number | null;
-	player: Player | null;
-	editMode: boolean;
-	assignPlayer: (slotKey: string, playerId: number | null) => void;
-	eligiblePlayers: (slotKey: string) => Player[];
-	slotKey: string;
-};
-
+import { Props } from "@/type/Type";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+const holaUrl = import.meta.env.VITE_HOLA_URL;
 const ShowPlayer = ({
-	player,
-	playerId,
-	editMode,
-	assignPlayer,
-	eligiblePlayers,
-	slotKey,
+  player,
+  playerId,
+  editMode,
+  assignPlayer,
+  eligiblePlayers,
+  slotKey,
 }: Props) => {
-	return (
-		<div className="flex flex-col items-center">
-			{/* Jersey number */}
-			<div className="w-14 h-14 md:w-20 md:h-20 rounded-full bg-white dark:bg-gray-400 flex items-center justify-center">
-				{player ? player.jerseyNumber : "Empty"}
-			</div>
+  const renderDropdown = () => {
+    if (!editMode) {
+      return;
+    }
 
-			{/* Name */}
-			<div className="text-sm font-semibold mt-1 text-center">
-				{player ? player.name : "No player"}
-			</div>
+    if (assignPlayer === undefined) {
+      return;
+    }
 
-			{/* Dropdown during edit */}
-			{editMode && (
-				<select
-					className="mt-1 border rounded p-0.5 text-sm dark:bg-amber-600"
-					value={playerId ?? ""}
-					onChange={(e) =>
-						assignPlayer(
-							slotKey,
-							e.target.value === ""
-								? null
-								: Number(e.target.value)
-						)
-					}
-				>
-					<option value="">Select player</option>
+    if (playerId === undefined) {
+      return;
+    }
 
-					{eligiblePlayers(slotKey).map((p) => (
-						<option key={p.id} value={p.id}>
-							{p.name} ({p.jerseyNumber})
-						</option>
-					))}
+    if (slotKey === undefined) {
+      return;
+    }
 
-					{/* Keep already selected player available */}
-					{player &&
-						!eligiblePlayers(slotKey).some(
-							(p) => p.id === player.id
-						) && (
-							<option value={player.id}>
-								{player.name} ({player.jerseyNumber})
-							</option>
-						)}
-				</select>
-			)}
-		</div>
-	);
+    if (eligiblePlayers === undefined) {
+      return;
+    }
+
+    return (
+      <Select
+        value={playerId ? String(playerId) : ""}
+        onValueChange={(value) =>
+          assignPlayer &&
+          assignPlayer(slotKey, value === "" ? null : Number(value))
+        }
+      >
+        <SelectTrigger className="md:w-30 w-20">
+          <SelectValue placeholder="Select a player" defaultValue="" />
+        </SelectTrigger>
+
+        <SelectContent>
+          <SelectGroup>
+            <SelectLabel>Players</SelectLabel>
+
+            {eligiblePlayers(slotKey).map((p) => (
+              <SelectItem key={p.id} value={String(p.id)}>
+                {p.name} ({p.jerseyNumber})
+              </SelectItem>
+            ))}
+            {player &&
+              !eligiblePlayers(slotKey).some((p) => p.id === player.id) && (
+                <SelectItem value={String(player.id)}>
+                  {player.name} ({player.jerseyNumber})
+                </SelectItem>
+              )}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+    );
+  };
+
+  return (
+    <div className="flex flex-col items-center">
+      {/* Jersey number */}
+      <div className="w-14 h-14 md:w-20 md:h-20 rounded-full bg-white dark:bg-gray-400 flex items-center justify-center my-3">
+        {player ? (
+          <Avatar className="object-fill size-19">
+            {player.avatarUrl ? (
+              <>
+                <AvatarImage src={player.avatarUrl} />
+                <AvatarFallback>{player.avatarUrl}</AvatarFallback>
+              </>
+            ) : (
+              <>
+                <AvatarImage src={holaUrl} />
+                <AvatarFallback>{holaUrl}</AvatarFallback>
+              </>
+            )}
+          </Avatar>
+        ) : (
+          <h1>Empty</h1>
+        )}
+      </div>
+
+      {/* Name */}
+      <div className="text-sm font-semibold mt-1 text-center">
+        {player ? player.name : "No player"}{" "}
+        {!editMode && (
+          <span className="bg-gray-500 w-6 h-6 rounded-full p-2 m-2">
+            {player ? player.jerseyNumber : "Empty"}
+          </span>
+        )}
+      </div>
+      {renderDropdown()}
+    </div>
+  );
 };
 
 export default ShowPlayer;

@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
 import { PlayerFormValues } from "@/type/Type";
 
-const baseURL = "http://localhost:3000";
+const baseURL = import.meta.env.VITE_API_URL;
 
 export const api = axios.create({
   baseURL,
@@ -20,12 +19,8 @@ export const getPlayerById = async (id: number) => {
 };
 
 export const addPlayer = async (player: PlayerFormValues) => {
-  try {
-    const response = await api.post("/players", player);
-    return response.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || "Something went wrong");
-  }
+  const response = await api.post("/players", player);
+  return response.data;
 };
 
 export const deletePlayer = async (id: number) => {
@@ -48,13 +43,24 @@ export const getStartingXI = async () => {
 
 export const createStartingXI = async (payload: {
   slots: Record<string, number>;
+  formation: string;
 }) => {
-  try {
-    const response = await api.post("/startingXI", payload);
-    return response.data;
-  } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message || "Please add all eleven players "
-    );
-  }
+  const response = await api.post("/startingXI", payload);
+  return response.data;
+};
+
+export const getFormation = async () => {
+  const res = await api.get("/formation");
+  return res.data;
+};
+
+export const createFormation = async (formation: string) => {
+  const response = await api.post("/formation", { formation });
+  return response.data;
+};
+
+export const deleteFormation = async (id: number) => {
+  const res = await api.delete(`/formation/${id}`);
+  console.log(res.data);
+  return res.data;
 };

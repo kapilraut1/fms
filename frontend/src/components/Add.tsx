@@ -12,14 +12,15 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { hello, Playerid, Position } from "../type/type";
+import { Adder, Playerid, Position, BackError } from "../type/Type";
+import { AxiosError } from "axios";
 import { useAddPlayer } from "@/hooks/useAddPlayer";
 import { useUpdatePlayers } from "@/hooks/useUpdatePlayer";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { useGetPlayers } from "@/hooks/useGetPlayers";
 
-export function Add({ open, onOpenChange, initialData }: hello) {
+export function Add({ open, onOpenChange, initialData }: Adder) {
   const { data } = useGetPlayers(1);
   const playerSchema = z.object({
     name: z.string().trim().min(1, "Name is required").max(50).toUpperCase(),
@@ -85,8 +86,9 @@ export function Add({ open, onOpenChange, initialData }: hello) {
   useEffect(() => {
     if (!open) {
       reset();
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setErr(undefined);
+      setTimeout(() => {
+        setErr("");
+      });
       clearErrors();
     }
   }, [open, reset, clearErrors]);
@@ -105,19 +107,29 @@ export function Add({ open, onOpenChange, initialData }: hello) {
       updateMutation.mutate(
         { id: initialData.id, player: newPlayer },
         {
-          onSuccess: () => onOpenChange(false),
-          onError: (error: Error) => {
-            console.log(error);
-            setErr(error.message);
+          onSuccess: () => {
+            onOpenChange(false);
+          },
+          onError: (error: BackError) => {
+            let message = "Something went wrong";
+            if (error instanceof AxiosError) {
+              message = error?.response?.data?.message ?? message;
+            }
+            setErr(message);
           },
         }
       );
     } else {
       addMutation.mutate(newPlayer, {
-        onSuccess: () => onOpenChange(false),
-        onError: (error: Error) => {
-          console.log(error);
-          setErr(error.message);
+        onSuccess: () => {
+          onOpenChange(false);
+        },
+        onError: (error: BackError) => {
+          let message = "Something went wrong";
+          if (error instanceof AxiosError) {
+            message = error?.response?.data?.message ?? message;
+          }
+          setErr(message);
         },
       });
     }
@@ -141,7 +153,6 @@ export function Add({ open, onOpenChange, initialData }: hello) {
           </DialogDescription>
         </DialogHeader>
         {err && <span className="text-red-400">{err}</span>}
-
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
           {/* Name */}
           <div className="grid gap-2">
@@ -211,6 +222,9 @@ export function Add({ open, onOpenChange, initialData }: hello) {
           <div className="grid gap-2">
             <Label>Avatar URL (optional)</Label>
             <Input {...register("avatarUrl")} />
+            {errors.avatarUrl && (
+              <span className="text-red-400">{errors.avatarUrl.message}</span>
+            )}
           </div>
 
           {/* Nationality */}
